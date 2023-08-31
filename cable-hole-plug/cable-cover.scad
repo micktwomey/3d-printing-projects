@@ -37,22 +37,8 @@ module cable_hole(diameter=10) {
     translate([-(diameter/2), 0, -2]) cube([diameter, diameter*2, 30]);
 }
 
-
-difference() {
-    // Add a cap to stop cylinder falling into hole
-    union() {
-        cylinder(h=tube_depth, r=adjusted_radius);
-//        translate([0, 0, 20]) cylinder(h=1, d=hole_diameter+1);
-        translate([0, 0, tube_depth])
-            rotate_extrude(convexity=10, angle=360)
-            translate([(radius/2), 0, 0])
-            rect([radius, 1], rounding=[0.5, 0, 0, 0.5]);
-    }
-
-    if (hollow_tube) {
-        translate([0, 0, -1]) cylinder(h=tube_depth-1, r=adjusted_radius-2);
-    }
-
+// Builds a series of holes to intersect with other shapes
+module cable_holes(cable_diameters) {
     cable_count = len(cable_diameters);
     assert(cable_count > 0);
     for(cable_i=[0:cable_count-1]) {
@@ -65,12 +51,37 @@ difference() {
     }
 }
 
-if (show_hole) {
-    color("green",0.5) cylinder(h=10, d=hole_diameter);
+module cover() {
+
+    difference() {
+        // Add a cap to stop cylinder falling into hole
+        union() {
+            cylinder(h=tube_depth, r=adjusted_radius);
+    //        translate([0, 0, 20]) cylinder(h=1, d=hole_diameter+1);
+            translate([0, 0, tube_depth])
+                rotate_extrude(convexity=10, angle=360)
+                translate([(radius/2), 0, 0])
+                rect([radius, 1], rounding=[0.5, 0, 0, 0.5]);
+        }
+
+        if (hollow_tube) {
+            translate([0, 0, -1]) cylinder(h=tube_depth-1, r=adjusted_radius-2);
+        }
+
+        cable_holes(cable_diameters=cable_diameters);
+
+    }
+
+
+    if (show_hole) {
+        color("green",0.5) cylinder(h=10, d=hole_diameter);
+    }
+
+    if (show_plug_wall) {
+        color("blue",0.5) rotate_extrude(convexity=10, angle=240)
+            translate([(radius - 4 / 2), 0, 0])
+            square([2, 20]);
+    }
 }
 
-if (show_plug_wall) {
-    color("blue",0.5) rotate_extrude(convexity=10, angle=240)
-        translate([(radius - 4 / 2), 0, 0])
-        square([2, 20]);
-}
+translate([0, 0, 10.5]) rotate([0, 180, 0]) cover();
